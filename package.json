@@ -1,0 +1,27 @@
+{
+  "name": "eshop-banner-api",
+  "version": "1.0.0",
+  "description": "API para gerenciamento de banners do EShop",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "dev:simple": "nodemon server-simple.js",
+    "test": "node server-simple.js",
+    "seed": "node seed/seedBanners.js"
+  },
+  "keywords": ["banner", "api", "ecommerce"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^8.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "multer": "^1.4.5-lts.1",
+    "express-validator": "^7.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
