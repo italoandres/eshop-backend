@@ -54,8 +54,17 @@ exports.createBanner = async (req, res) => {
     const { storeId } = req.params;
     const { title, imageUrl, targetUrl, order, active, startAt, endAt } = req.body;
 
+    // LOG DETALHADO
+    console.log('=== CREATE BANNER ===');
+    console.log('StoreId:', storeId);
+    console.log('Body:', JSON.stringify(req.body).substring(0, 200));
+    console.log('Title:', title);
+    console.log('ImageUrl exists:', !!imageUrl, 'Length:', imageUrl?.length || 0);
+    console.log('TargetUrl:', targetUrl);
+
     // Validar campos obrigatórios
     if (!title || !imageUrl || !targetUrl) {
+      console.error('❌ MISSING FIELDS:', { title: !!title, imageUrl: !!imageUrl, targetUrl: !!targetUrl });
       return res.status(400).json({ 
         message: 'Campos obrigatórios faltando', 
         required: ['title', 'imageUrl', 'targetUrl'],
@@ -66,7 +75,7 @@ exports.createBanner = async (req, res) => {
     const banner = await Banner.create({
       storeId,
       title,
-      imageUrl, // Aceita tanto URL quanto base64
+      imageUrl,
       targetUrl,
       order: order || 0,
       active: active !== undefined ? active : true,
@@ -74,9 +83,10 @@ exports.createBanner = async (req, res) => {
       endAt: endAt || null,
     });
 
+    console.log('✅ Banner created:', banner._id);
     res.status(201).json(banner);
   } catch (error) {
-    console.error('Error creating banner:', error);
+    console.error('❌ Error creating banner:', error.message);
     res.status(400).json({ message: 'Erro ao criar banner', error: error.message });
   }
 };
