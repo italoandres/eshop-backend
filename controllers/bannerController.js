@@ -24,7 +24,8 @@ exports.getBanners = async (req, res) => {
       return banner.endAt >= now;
     });
 
-    res.json(activeBanners);
+    // Retornar no formato esperado pelo app Flutter
+    res.json({ data: activeBanners });
   } catch (error) {
     console.error('Error fetching banners:', error);
     res.status(500).json({ message: 'Erro ao buscar banners', error: error.message });
