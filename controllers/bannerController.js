@@ -54,10 +54,19 @@ exports.createBanner = async (req, res) => {
     const { storeId } = req.params;
     const { title, imageUrl, targetUrl, order, active, startAt, endAt } = req.body;
 
+    // Validar campos obrigatórios
+    if (!title || !imageUrl || !targetUrl) {
+      return res.status(400).json({ 
+        message: 'Campos obrigatórios faltando', 
+        required: ['title', 'imageUrl', 'targetUrl'],
+        received: { title: !!title, imageUrl: !!imageUrl, targetUrl: !!targetUrl }
+      });
+    }
+
     const banner = await Banner.create({
       storeId,
       title,
-      imageUrl,
+      imageUrl, // Aceita tanto URL quanto base64
       targetUrl,
       order: order || 0,
       active: active !== undefined ? active : true,
