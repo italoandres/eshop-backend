@@ -54,14 +54,13 @@ exports.getAllBanners = async (req, res) => {
 exports.createBanner = async (req, res) => {
   try {
     const { storeId } = req.params;
-    const { title, imageUrl, targetUrl, order, active, startAt, endAt } = req.body;
+    let { title, imageUrl, targetUrl, order, active, startAt, endAt } = req.body;
 
     // LOG DETALHADO
     console.log('=== CREATE BANNER ===');
     console.log('StoreId:', storeId);
-    console.log('Body:', JSON.stringify(req.body).substring(0, 200));
     console.log('Title:', title);
-    console.log('ImageUrl exists:', !!imageUrl, 'Length:', imageUrl?.length || 0);
+    console.log('ImageUrl type:', isBase64Image(imageUrl) ? 'BASE64' : 'URL');
     console.log('TargetUrl:', targetUrl);
 
     // Validar campos obrigatórios
@@ -72,6 +71,19 @@ exports.createBanner = async (req, res) => {
         required: ['title', 'imageUrl', 'targetUrl'],
         received: { title: !!title, imageUrl: !!imageUrl, targetUrl: !!targetUrl }
       });
+    }
+
+    // Upload para Cloudinary se for base64
+    if (isBase64Image(imageUrl)) {
+      console.log('📤 Base64 detectado! Upload para Cloudinary...');
+      try {
+        const uploadResult = await uploadImage(imageUrl, 'eshop/banners');
+        imageUrl = uploadResult.url;
+        console.log('✅ Cloudinary upload OK:', imageUrl);
+      } catch (uploadError) {
+        console.error('⚠️ Cloudinary falhou, usando base64:', uploadError.message);
+        // Continua com base64 se Cloudinary falhar
+      }
     }
 
     const banner = await Banner.create({
@@ -99,12 +111,24 @@ exports.createBanner = async (req, res) => {
 exports.updateBanner = async (req, res) => {
   try {
     const { storeId, id } = req.params;
-    const { title, imageUrl, targetUrl, order, active, startAt, endAt } = req.body;
+    let { title, imageUrl, targetUrl, order, active, startAt, endAt } = req.body;
 
     const banner = await Banner.findOne({ _id: id, storeId });
 
     if (!banner) {
       return res.status(404).json({ message: 'Banner não encontrado' });
+    }
+
+    // Upload para Cloudinary se for base64
+    if (imageUrl && isBase64Image(imageUrl)) {
+      console.log('📤 Base64 detectado no update! Upload para Cloudinary...');
+      try {
+        const uploadResult = await uploadImage(imageUrl, 'eshop/banners');
+        imageUrl = uploadResult.url;
+        console.log('✅ Cloudinary upload OK:', imageUrl);
+      } catch (uploadError) {
+        console.error('⚠️ Cloudinary falhou, usando base64:', uploadError.message);
+      }
     }
 
     // Atualizar campos
