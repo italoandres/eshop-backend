@@ -8,16 +8,34 @@ cloudinary.config({
   secure: true,
 });
 
-const uploadImage = async (imageData, folder = 'eshop') => {
+const uploadImage = async (imageData, folder = 'eshop', customTransformation = null) => {
   try {
+    // Default transformation for banners (1200x600)
+    const defaultTransformation = [
+      { width: 1200, height: 600, crop: 'limit' },
+      { quality: 'auto:good' },
+      { fetch_format: 'auto' },
+    ];
+
+    // Logo transformation (800x800) - used when folder is 'eshop/logos'
+    const logoTransformation = [
+      { width: 800, height: 800, crop: 'limit' },
+      { quality: 'auto:good' },
+      { fetch_format: 'auto' },
+    ];
+
+    // Determine which transformation to use
+    let transformation = defaultTransformation;
+    if (customTransformation) {
+      transformation = customTransformation;
+    } else if (folder === 'eshop/logos') {
+      transformation = logoTransformation;
+    }
+
     const result = await cloudinary.uploader.upload(imageData, {
       folder,
       resource_type: 'image',
-      transformation: [
-        { width: 1200, height: 600, crop: 'limit' },
-        { quality: 'auto:good' },
-        { fetch_format: 'auto' },
-      ],
+      transformation,
     });
     return { url: result.secure_url, publicId: result.public_id };
   } catch (error) {
