@@ -1,4 +1,5 @@
 const Banner = require('../models/Banner');
+const { uploadImage, deleteImage, isBase64Image } = require('../services/cloudinaryService');
 
 // @desc    Get all active banners for a store
 // @route   GET /api/stores/:storeId/banners
