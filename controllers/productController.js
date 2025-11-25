@@ -1,4 +1,63 @@
 const Product = require('../models/Product');
+const { uploadImage, isBase64Image } = require('../services/cloudinaryService');
+
+/**
+ * Processa imagens das variantes, fazendo upload para Cloudinary se necessário
+ * @param {Array} variants - Array de variantes do produto
+ * @returns {Promise<Array>} - Variantes com URLs do Cloudinary
+ */
+async function processVariantImages(variants) {
+  if (!variants || variants.length === 0) {
+    return variants;
+  }
+
+  console.log(`📦 Processando ${variants.length} variante(s)...`);
+
+  // Processar cada variante
+  const processedVariants = await Promise.all(
+    variants.map(async (variant) => {
+      if (!variant.images || variant.images.length === 0) {
+        return variant;
+      }
+
+      console.log(`🎨 Processando cor: ${variant.color} (${variant.images.length} foto(s))`);
+
+      // Processar cada imagem da variante
+      const processedImages = await Promise.all(
+        variant.images.map(async (image, index) => {
+          // Se já é URL do Cloudinary ou externa, manter
+          if (!isBase64Image(image.url)) {
+            console.log(`  ✓ Foto ${index + 1}: URL externa (mantida)`);
+            return image;
+          }
+
+          // É base64, fazer upload
+          console.log(`  📤 Foto ${index + 1}: Fazendo upload...`);
+          try {
+            const uploadResult = await uploadImage(image.url, 'eshop/products');
+            console.log(`  ✅ Foto ${index + 1}: Upload concluído`);
+            
+            return {
+              ...image,
+              url: uploadResult.url // Substitui base64 pela URL do Cloudinary
+            };
+          } catch (error) {
+            console.error(`  ❌ Foto ${index + 1}: Erro no upload:`, error.message);
+            throw new Error(`Erro ao fazer upload da foto ${index + 1} da cor ${variant.color}`);
+          }
+        })
+      );
+
+      return {
+        ...variant,
+        images: processedImages
+      };
+    })
+  );
+
+  console.log('✅ Todas as variantes processadas!');
+  return processedVariants;
+}
 
 // Listar produtos com filtros
 exports.getAllProducts = async (req, res) => {
@@ -91,6 +150,20 @@ exports.getProductById = async (req, res) => {
 // Criar produto
 exports.createProduct = async (req, res) => {
   try {
+    // ✨ Processar imagens das variantes (upload para Cloudinary)
+    if (req.body.variants && req.body.variants.length > 0) {
+      console.log('🚀 Iniciando processamento de imagens...');
+      try {
+        req.body.variants = await processVariantImages(req.body.variants);
+      } catch (uploadError) {
+        console.error('❌ Erro ao processar imagens:', uploadError.message);
+        return res.status(500).json({ 
+          message: 'Erro ao fazer upload das imagens', 
+          error: uploadError.message 
+        });
+      }
+    }
+    
     const product = new Product(req.body);
     
     // ✅ Converter variants → priceTags/images/categories ANTES de salvar
@@ -149,6 +222,20 @@ exports.updateProduct = async (req, res) => {
     
     if (!existingProduct) {
       return res.status(404).json({ message: 'Produto não encontrado' });
+    }
+    
+    // ✨ Processar imagens das variantes (upload para Cloudinary)
+    if (req.body.variants && req.body.variants.length > 0) {
+      console.log('🚀 Iniciando processamento de imagens...');
+      try {
+        req.body.variants = await processVariantImages(req.body.variants);
+      } catch (uploadError) {
+        console.error('❌ Erro ao processar imagens:', uploadError.message);
+        return res.status(500).json({ 
+          message: 'Erro ao fazer upload das imagens', 
+          error: uploadError.message 
+        });
+      }
     }
     
     // Atualizar campos
