@@ -113,8 +113,24 @@ exports.getAllProducts = async (req, res) => {
 
     const total = await Product.countDocuments(query);
 
+    console.log(`📊 GET PRODUCTS - Encontrados: ${products.length} produtos`);
+
     // Converte para formato compatível com Flutter
     const compatibleProducts = products.map(p => p.toCompatibleFormat());
+
+    console.log(`✅ GET PRODUCTS - Retornando ${compatibleProducts.length} produtos compatíveis`);
+    if (compatibleProducts.length > 0) {
+      console.log(`📦 Primeiro produto:`, {
+        id: compatibleProducts[0]._id,
+        name: compatibleProducts[0].name,
+        hasImages: !!compatibleProducts[0].images,
+        imagesCount: compatibleProducts[0].images?.length || 0,
+        hasPriceTags: !!compatibleProducts[0].priceTags,
+        priceTagsCount: compatibleProducts[0].priceTags?.length || 0,
+        hasVariants: !!compatibleProducts[0].variants,
+        variantsCount: compatibleProducts[0].variants?.length || 0
+      });
+    }
 
     // Formato compatível com Flutter
     res.json({
