@@ -150,6 +150,16 @@ exports.getProductById = async (req, res) => {
 // Criar produto
 exports.createProduct = async (req, res) => {
   try {
+    console.log('🎯 CREATE PRODUCT - Recebido:', {
+      hasVariants: !!req.body.variants,
+      variantsCount: req.body.variants?.length || 0,
+      firstVariant: req.body.variants?.[0] ? {
+        color: req.body.variants[0].color,
+        imagesCount: req.body.variants[0].images?.length || 0,
+        firstImageType: req.body.variants[0].images?.[0]?.url?.substring(0, 30)
+      } : null
+    });
+
     // ✨ Processar imagens das variantes (upload para Cloudinary)
     if (req.body.variants && req.body.variants.length > 0) {
       console.log('🚀 Iniciando processamento de imagens...');
@@ -217,6 +227,17 @@ exports.createProduct = async (req, res) => {
 // Atualizar produto
 exports.updateProduct = async (req, res) => {
   try {
+    console.log('🎯 UPDATE PRODUCT - Recebido:', {
+      productId: req.params.id,
+      hasVariants: !!req.body.variants,
+      variantsCount: req.body.variants?.length || 0,
+      firstVariant: req.body.variants?.[0] ? {
+        color: req.body.variants[0].color,
+        imagesCount: req.body.variants[0].images?.length || 0,
+        firstImageType: req.body.variants[0].images?.[0]?.url?.substring(0, 30)
+      } : null
+    });
+
     // Buscar produto existente
     const existingProduct = await Product.findById(req.params.id);
     
